@@ -20,6 +20,7 @@ from tqdm import tqdm
 from collections import OrderedDict
 
 import sys, argparse, os, time
+from numpy import array
 
 import MPG_Statistics
 
@@ -27,6 +28,11 @@ width, height = (952,550)
 LEFT = width - 70
 RIGHT = width - 9
 DOTS_LOCATION = [(24,33),(79,88),(134,143),(189,198),(244,253),(299,308),(354,363),(409,418),(464,473),(519,528)]
+
+LEFT_JERSEY = 70
+RIGHT_JERSEY = 94
+JERSEY_LOCATION = [tuple(x) for x in [array([14,38])+55*i for i in range(0,10)]]
+PASTE_JERSEY_LOCATION = [(70, 14+55*i) for i in range(10)]
 
 class MPG_Scrapper():
 
@@ -164,16 +170,19 @@ class MPG_Scrapper():
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         all_elements = soup.find_all('div',class_='index__bodyStyle___h4xYl')
+        ranking_previous = dict()
         for idx, element in enumerate(all_elements):
             if idx < target_man or idx > target_man :
                 team_name_ = element.find('a', attrs={'class':'index__root___12BYS index__playerTitleTextStyle___1r9ga index__padder___2MA83'}).text
                 user_cor = element.find('div', attrs={'class':'index__playerSubtitleTextStyle___3N6uc'}).text
                 Team_to_user[team_name_] = user_cor
+                ranking_previous[idx] = team_name_ 
 
             if idx == target_man:
                 team_name_ = element.find('a', attrs={'class':'index__root___12BYS index__targetManCroped___wTzNy index__padder___2MA83'}).text
                 user_cor = element.find('div', attrs={'class':'index__playerSubtitleTextStyle___3N6uc'}).text
                 Team_to_user[team_name_] = user_cor
+                ranking_previous[idx] = team_name_ 
 
         for idx, team_name in enumerate(ranking):
             if idx < target_man :
@@ -209,6 +218,15 @@ class MPG_Scrapper():
         im = Image.open('pageImage.png')
         im2 = im.crop((int(x), int(y), int(width), int(height)))
         im2.save('ranking_before.png')
+
+        for i in range(self.nb_gamers):
+            jersey = im2.crop((LEFT_JERSEY, JERSEY_LOCATION[i][0], RIGHT_JERSEY, JERSEY_LOCATION[i][1]))
+            jersey.save('./{}.PNG'.format(ranking_previous[i]))
+
+        for i in range(self.nb_gamers):
+            jersey = Image.open('./{}.PNG'.format(ranking_previous[i]))
+            new_ranking = ranking.index(ranking_previous[i])
+            im2.paste(jersey, PASTE_JERSEY_LOCATION[new_ranking])
 
         grey_location = ranking.index(self.user_team_name)
 
