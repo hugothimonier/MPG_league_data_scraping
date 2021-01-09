@@ -215,7 +215,7 @@ class MPG_Scrapper():
         for i in range(self.nb_gamers):
             color = 'grey' if i==grey_location else 'white'
             dot_series = self.generate_img_series(series[ranking[i]], color=color)
-            im.paste(dot_series, (LEFT,DOTS_LOCATION[i][0]))
+            im2.paste(dot_series, (LEFT,DOTS_LOCATION[i][0]))
         im2.save('ranking_after.png')
 
     def find_score(self):
@@ -257,7 +257,7 @@ class MPG_Scrapper():
         bonus_away = []
 
         if len(bonus_blocs) ==0:
-        	return 'No bonus', 'No bonus'
+            return 'No bonus', 'No bonus'
 
         if len(str(bonus_blocs[0]).split('3C7cm\">')) == 1:
             bonus_home.append('No bonus')
@@ -305,9 +305,9 @@ class MPG_Scrapper():
 
         print(bonus_home, bonus_away)
         if 'Tonton pat\'' in bonus_home:
-        	bonus_home = 'Tonton pat'
+            bonus_home = 'Tonton pat'
         if "Tonton pat\'" in bonus_away:
-        	bonus_away = 'Tonton pat'
+            bonus_away = 'Tonton pat'
         return bonus_home, bonus_away
 
     def find_scorer(self):
@@ -335,7 +335,7 @@ class MPG_Scrapper():
                 if type(scorer)!=list:
                     scorer = str(scorer)[start:end].replace(u'\xa0', u'')
                 if "index__nanard5M___LDOv1" in scorer :
-                	scorer = [scorer.split('<small')[0], 'Canceled by la valise à nanard']
+                    scorer = [scorer.split('<small')[0], 'Canceled by la valise à nanard']
                 if number_of_goals > 1 :
                     scorer = [scorer, str(number_of_goals)]
                 scorer_list_home.append(scorer)
@@ -384,7 +384,7 @@ class MPG_Scrapper():
         for tab_entry in table_home:
             table_home = tab_entry.find_all('tbody')
         for tab_entry in table_away:
-    	    table_away = tab_entry.find_all('tbody')
+            table_away = tab_entry.find_all('tbody')
 
         for tbody in table_home[1:]:
             details = tbody.find_all('td', class_="index__column___18Jlk index__player___2S1sy index__playerResult___1_qRK")
@@ -402,7 +402,7 @@ class MPG_Scrapper():
 
             goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__root___2XTpz jss6")))
             if goals == 0 :
-            	goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__mpg___uUgmt index__root___2XTpz jss6")))
+                goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__mpg___uUgmt index__root___2XTpz jss6")))
 
             note = tbody.find_all('td', class_="index__rating___3aKs0")[0].renderContents() if len(tbody.find_all('td', class_="index__rating___3aKs0"))==1 else tbody.find_all('td', class_="index__rating___3aKs0")[1].renderContents() 
             bonus = tbody.find_all('td', class_="index__bonus___3iE2K")[0].renderContents() if len(tbody.find_all('td', class_="index__bonus___3iE2K"))==1 else tbody.find_all('td', class_="index__bonus___3iE2K")[1].renderContents()
@@ -479,8 +479,8 @@ class MPG_Scrapper():
             details = tbody.find_all('td', class_="index__column___18Jlk index__player___2S1sy index__playerResult___1_qRK")
 
             for idx, x in enumerate(tbody.find_all('td',class_="index__column___18Jlk index__number___1WoJM")):
-            	if idx == 0 :
-            	    index_tab = float(x.renderContents()) - 1
+                if idx == 0 :
+                    index_tab = float(x.renderContents()) - 1
 
             if index_tab in defense :
                 position = 'D'
