@@ -1,7 +1,7 @@
-from tqdm import tqdm
+import sys, argparse, os, time
+
 from numpy import mean
 
-import sys, argparse, os, time
 
 
 class MPG_Statistics():
@@ -98,6 +98,80 @@ class MPG_Statistics():
                 return False
 
 
+    def goal_MPG_nohomebonus(self, position, grade, opponent_player_grades):
+
+        opponent_player_grades_d = []
+        opponent_player_grades_m = []
+        opponent_player_grades_a = []
+        opponent_player_grades_g = 0
+
+        grade = float(grade)
+
+        for key in opponent_player_grades.keys():
+            if opponent_player_grades[key][3]=='G':
+               opponent_player_grades_g += float(opponent_player_grades[key][1])
+            if opponent_player_grades[key][3]=='D':
+                opponent_player_grades_d.append(float(opponent_player_grades[key][1]))
+            if opponent_player_grades[key][3]=='M':
+                opponent_player_grades_m.append(float(opponent_player_grades[key][1]))
+            if opponent_player_grades[key][3]=='A':
+                opponent_player_grades_a.append(float(opponent_player_grades[key][1]))
+
+        avg_def = float(mean(opponent_player_grades_d))
+        avg_mid = float(mean(opponent_player_grades_m))
+        avg_att = float(mean(opponent_player_grades_a))
+
+        if position == 'D':
+            if (grade > avg_att) :
+                grade -= 1
+            else :
+                return False
+
+            if (grade > avg_mid) :
+                grade -= 0.5
+            else :
+                return False
+
+            if (grade > avg_def) :
+                grade -= 0.5
+            else :
+                return False
+
+            if (grade > opponent_player_grades_g) :
+                return True
+            else:
+                return False
+
+        if position == 'M':
+
+            if (grade > avg_mid) :
+                grade -= 1
+            else :
+                return False
+
+            if (grade > avg_def) or (grade == avg_def and home):
+                grade -= 0.5
+            else :
+                return False
+
+            if (grade > opponent_player_grades_g):
+                return True
+            else:
+                return False
+
+
+        if position == 'A':
+
+            if (grade > avg_def) :
+                grade -= 1
+            else :
+                return False
+
+            if (grade > opponent_player_grades_g) :
+                return True
+            else:
+                return False
+
     def rebuilt_team_wo_redchp(self, rates, formation):
 
         defense = [*range(1, int(formation[0])+1)]
@@ -127,7 +201,7 @@ class MPG_Statistics():
         return None
 
 
-    def recompute_game_score(self, home_rates, away_rates, home_goal, away_goal, home_bonus, away_bonus,
+    def recompute_game_score_nobonus(self, home_rates, away_rates, home_goal, away_goal, home_bonus, away_bonus,
         home_formation, away_formation):
         '''
         recompute the score of a game without the bonus (except tonton pat)
@@ -175,8 +249,8 @@ class MPG_Statistics():
         
         for player in home_rates.keys():
             if home_rates[player][-1]!='G':
-                mpg_goal = self.goal_MPG_nobonus(position=home_rates[player][-1], grade=float(home_rates[player][1]), bonus_player=float(home_rates[player][2]),
-                 opponent_player_grades=away_rates, home=True, att_bonus_def=home_def_bonus, def_bonus_def=away_def_bonus)
+                mpg_goal = self.goal_MPG_nohomebonus(position=home_rates[player][-1], grade=float(home_rates[player][1]), bonus_player=float(home_rates[player][2]),
+                 opponent_player_grades=away_rates, att_bonus_def=home_def_bonus, def_bonus_def=away_def_bonus)
                 if mpg_goal and int(home_rates[player][0])==0:
                     home_goal_wo_MPG.append([player, 'MPG no bonus'])
                 if 'excluded by Chapron Rouge' in home_rates[player]:
@@ -185,7 +259,7 @@ class MPG_Statistics():
 
         for player in away_rates.keys():
             if away_rates[player][-1]!='G':
-                mpg_goal = self.goal_MPG_nobonus(position=away_rates[player][-1], grade=away_rates[player][1], bonus_player=float(away_rates[player][2]),
+                mpg_goal = self.goal_MPG_nohomebonus(position=away_rates[player][-1], grade=away_rates[player][1], bonus_player=float(away_rates[player][2]),
                  opponent_player_grades=home_rates, home=False, att_bonus_def=away_def_bonus, def_bonus_def=home_def_bonus)
                 if mpg_goal and int(away_rates[player][0])==0:
                     away_goal_wo_MPG.append([player, 'MPG no bonus'])
@@ -195,15 +269,55 @@ class MPG_Statistics():
 
         return home_goal_wo_MPG, away_goal_wo_MPG
 
+    def recompute_game_score_nohomebonus(self, home_rates, away_rates, home_goal, away_goal, home_bonus, away_bonus,
+        home_formation, away_formation):
+        '''
+        recompute the score of a game without the bonus (except tonton pat)
+        @args:
+            {dict} home_rates : rates of home team
+            {dict} away_rates : rates of away team 
+            {list} home_goal : list of home scorers
+            {list} away_rates : list of away scorers 
+            {str} home_bonus : home bonus
+            {str} away_bonus : away bonus
+            {int} home_rotaldo : number of home rotaldo
+            {int} away_rotaldo : number of away rotaldo
+            {str} formation : composition of team
+        @returns:
+            {list}, {list} goal scorers and score
+        '''
+        
+        #remove MPG Goals, will be replaced by recomputed MPG goals without home bonus
+        home_goal_wo_MPG = [goal for goal in home_goal if 'But MPG' not in goal]
+        away_goal_wo_MPG = [goal for goal in away_goal if 'But MPG' not in goal]
+        
+        for player in home_rates.keys():
+            if home_rates[player][-1]!='G':
+                mpg_goal = self.goal_MPG_nohomebonus(position=home_rates[player][-1], grade=float(home_rates[player][1]), opponent_player_grades=away_rates)
+                if mpg_goal and int(home_rates[player][0])==0:
+                    home_goal_wo_MPG.append([player, 'MPG no bonus'])
 
-    def ranking_wo_bonus(self, dataframe):
+        for player in away_rates.keys():
+            if away_rates[player][-1]!='G':
+                mpg_goal = self.goal_MPG_nohomebonus(position=away_rates[player][-1], grade=away_rates[player][1], opponent_player_grades=home_rates)
+                if mpg_goal and int(away_rates[player][0])==0:
+                    away_goal_wo_MPG.append([player, 'MPG no bonus'])
+
+        return home_goal_wo_MPG, away_goal_wo_MPG
+
+
+    def ranking_wo_bonus(self, dataframe, no_bonus='all'):
         '''
         returns ranking without MPG bonus except for Tonton Pat since we do not dispose of bench ranking
         @args :
             {pandas.DataFrame} dataframe : data in the form of the one scrapped
+            {str} no_bonus : whether to remove all bonus, or only home bonus
         @returns :
             {dict, OrderedDict} game results, league ranking
         '''
+
+        assert no_bonus == 'all' or no_bonus=='home bonus'
+
         points = dict()
         goal_average = dict()
         vic_number = dict()
@@ -242,10 +356,20 @@ class MPG_Statistics():
             home_composition = dataframe['formation home'][i]
             away_composition = dataframe['formation away'][i]
 
-            home_scorers_nobonus, away_scorers_nobonus = self.recompute_game_score(home_rates=home_grades, away_rates=away_grades,
-                                                                                   home_goal=home_goal, away_goal=away_goal,
-                                                                                   home_bonus=bonus_home, away_bonus=bonus_away,
-                                                                                   home_formation=home_composition, away_formation=away_composition)
+            if no_bonus=='all':
+
+                home_scorers_nobonus, away_scorers_nobonus = self.recompute_game_score_nobonus(home_rates=home_grades, away_rates=away_grades,
+                                                                                           home_goal=home_goal, away_goal=away_goal,
+                                                                                           home_bonus=bonus_home, away_bonus=bonus_away,
+                                                                                           home_formation=home_composition, away_formation=away_composition)
+
+            if no_bonus=='home bonus':
+
+            	home_scorers_nobonus, away_scorers_nobonus = self.recompute_game_score_nohomebonus(home_rates=home_grades, away_rates=away_grades,
+                                                                                           home_goal=home_goal, away_goal=away_goal,
+                                                                                           home_bonus=bonus_home, away_bonus=bonus_away,
+                                                                                           home_formation=home_composition, away_formation=away_composition)
+
 
             number_of_home_goals = 0
             number_of_away_goals = 0
@@ -253,9 +377,14 @@ class MPG_Statistics():
             for scorer in home_scorers_nobonus:
                 if type(scorer)==str:
                     number_of_home_goals += 1
+                if (len(scorer)==2) and (scorer[-1] == 'Canceled by la valise à nanard'):
+                	continue
+                if (len(scorer)==2) and ('Canceled by la valise à nanard' in scorer):
+                    if 'Canceled by la valise à nanard' in scorer[0]:
+                        number_of_away_goals += int(scorer[-1]) - 1
                 if (len(scorer)==2) and (scorer[-1] == 'MPG no bonus'):
                     number_of_home_goals += 1
-                if (len(scorer)==2) and (('Canceled by keeper' not in scorer) and (scorer[-1] != 'MPG no bonus')):
+                if (len(scorer)==2) and (('Canceled by keeper' not in scorer) and (scorer[-1] != 'MPG no bonus') and ('Canceled by la valise à nanard' not in scorer)):
                     number_of_home_goals += int(scorer[-1])
                 if (len(scorer)==2) and ('Canceled by keeper' in scorer):
                     if 'Canceled by keeper' in scorer[0]:
@@ -267,7 +396,12 @@ class MPG_Statistics():
                     number_of_away_goals += 1
                 if (len(scorer)==2) and (scorer[-1] == 'MPG no bonus'):
                 	number_of_away_goals += 1
-                if (len(scorer)==2) and (('Canceled by keeper' not in scorer) and (scorer[-1] != 'MPG no bonus')):
+                if (len(scorer)==2) and (scorer[-1] == 'Canceled by la valise à nanard'):
+                	continue
+                if (len(scorer)==2) and ('Canceled by la valise à nanard' in scorer):
+                    if 'Canceled by la valise à nanard' in scorer[0]:
+                        number_of_away_goals += int(scorer[-1]) - 1
+                if (len(scorer)==2) and (('Canceled by keeper' not in scorer) and (scorer[-1] != 'MPG no bonus') and ('Canceled by la valise à nanard' not in scorer)):
                     number_of_away_goals += int(scorer[-1])
                 if (len(scorer)==2) and ('Canceled by keeper' in scorer):
                     if 'Canceled by keeper' in scorer[0]:
@@ -316,6 +450,10 @@ class MPG_Statistics():
         	goal_average[team] = goal_scored[team] - goal_conceded[team]
 
         return game_scores, points, goal_average, vic_number, draw_number, los_number, series, goal_conceded, goal_scored
+
+
+   # def player_goal_number(self, dataframe):
+
 
     def MPG_goalscorer_avg_rate(self, dataframe, return_all=False, return_figure=False):
         '''

@@ -1,25 +1,17 @@
+import sys, argparse, os, time
+
 from selenium import webdriver
-from selenium.webdriver.support import ui
 from selenium.webdriver.support.ui import WebDriverWait 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
-from explicit import waiter, XPATH
-
 from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
 from PIL import Image
 
 from bs4 import BeautifulSoup
-from sys import exit
-import pandas as pd
+from pandas import DataFrame
 from numpy import mean
-
-from tqdm import tqdm
-from collections import OrderedDict
-
-import sys, argparse, os, time
 from numpy import array
 
 import MPG_Statistics
@@ -140,7 +132,7 @@ class MPG_Scrapper():
     
         return out_image               
 
-    def get_ranking_image(self, points, vic_number, goal_average, draw_number, los_number, series, goal_conceded, goal_scored, league_name=None):
+    def get_ranking_image(self, points, vic_number, goal_average, draw_number, los_number, series, goal_conceded, goal_scored, league_name=None, out_img_name='ranking_nobonus'):
 
         self.open_page()
         self.driver.implicitly_wait(10)
@@ -227,7 +219,7 @@ class MPG_Scrapper():
         height = location['y']+size['height'];
         im = Image.open('pageImage.png')
         im2 = im.crop((int(x), int(y), int(width), int(height)))
-        im2.save('ranking_before.png')
+        #im2.save('ranking_before.png')
 
         for i in range(self.nb_gamers):
             jersey = im2.crop((LEFT_JERSEY, JERSEY_LOCATION[i][0], RIGHT_JERSEY, JERSEY_LOCATION[i][1]))
@@ -244,7 +236,7 @@ class MPG_Scrapper():
             color = 'grey' if i==grey_location else 'white'
             dot_series = self.generate_img_series(series[ranking[i]], color=color)
             im2.paste(dot_series, (LEFT,DOTS_LOCATION[i][0]))
-        im2.save('ranking_after.png')
+        im2.save('{}.png'.format(out_img_name))
 
         for i in range(self.nb_gamers):
             os.remove('./{}.PNG'.format(ranking_previous[i]))
@@ -562,7 +554,7 @@ class MPG_Scrapper():
         columns = ['team_home', 'team_away', 'GW', 'score', 'winner', 'goal home', 'goal away',
         'formation home', 'formation away', 'bonus home', 'bonus away', 'scorer home', 'scorer away',
         'player_grades home', 'player_grades away']
-        data_general = pd.DataFrame(columns=columns)
+        data_general = DataFrame(columns=columns)
 
         assert league_name==league_name, 'Name of League cannot be None you donkey'
         self.open_page()
@@ -630,7 +622,7 @@ class MPG_Scrapper():
                         excluded_player_away.append('excluded by Chapron Rouge')
                         player_grades_away[player_name] = excluded_player_away
                 time.sleep(5)
-                game_data = pd.DataFrame(columns=columns)
+                game_data = DataFrame(columns=columns)
 
                 data_general.loc[len(data_general)] = [users[0], users[1], i, score, winner, score[0], score[1], formation[0], formation[1],
                  bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away] 
