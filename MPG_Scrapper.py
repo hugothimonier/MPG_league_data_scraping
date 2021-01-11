@@ -34,6 +34,9 @@ RIGHT_JERSEY = 94
 JERSEY_LOCATION = [tuple(x) for x in [array([14,38])+55*i for i in range(0,10)]]
 PASTE_JERSEY_LOCATION = [(70, 14+55*i) for i in range(10)]
 
+chrome_options = Options()
+chrome_options.add_argument("--window-size=1920,2000")
+
 class MPG_Scrapper():
 
     def __init__(self, user, pwd, nb_gw, nb_gamers, user_team_name):
@@ -42,7 +45,7 @@ class MPG_Scrapper():
         self.pwd = pwd
         self.nb_gw = nb_gw
         self.nb_gamers = nb_gamers
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(chrome_options=chrome_options)
         self.url = 'https://mpg.football/?type=login'
         self.MPG_statistics = MPG_Statistics.MPG_Statistics()
         self.user_team_name = user_team_name
@@ -149,16 +152,23 @@ class MPG_Scrapper():
 
         self.open_page(url=ranking_url)
         self.driver.maximize_window()
-        ele = self.driver.find_element_by_tag_name('body')
-        total_height = ele.size["height"]+1000
 
-
-        time.sleep(2)
-
-        self.driver.set_window_size(1920+500, total_height) 
         rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
         location = rankingElement.location
         size = rankingElement.size
+        self.driver.set_window_position(0, 0)
+        self.driver.set_window_size(1920, 2000)
+        rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
+        location = rankingElement.location
+        size = rankingElement.size
+
+        rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
+        location = rankingElement.location
+        size = rankingElement.size
+
+        size_ = self.driver.get_window_size()
+        print("Window size: width = {}px, height = {}px".format(size_["width"], size_["height"]))
+
 
         ranking = self.get_ranking_from_points(points)
         print(ranking)
@@ -235,6 +245,10 @@ class MPG_Scrapper():
             dot_series = self.generate_img_series(series[ranking[i]], color=color)
             im2.paste(dot_series, (LEFT,DOTS_LOCATION[i][0]))
         im2.save('ranking_after.png')
+
+        for i in range(self.nb_gamers):
+            os.remove('./{}.PNG'.format(ranking_previous[i]))
+
 
     def find_score(self):
 
