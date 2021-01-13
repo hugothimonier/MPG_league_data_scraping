@@ -43,11 +43,14 @@ game_scores, points, goal_average, vic_number, draw_number, los_number, series, 
 mpg_scrapper.get_ranking_image(points, vic_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name='League Name', out_img_name='new_ranking')
 ```
 #### Example of such generated image :
+
 ##### Original ranking 
 <p align="center">
   <img src="https://github.com/hugothimonier/MPG_league_data_scrapping/blob/master/ranking.png" alt="Original Ranking" height = '100%' width ='100%' /> 
 </p>
+
 ##### Recomputed ranking 
+
 <p align="center">
 <img src="https://github.com/hugothimonier/MPG_league_data_scrapping/blob/master/ranking_after.png" alt="Recomputed Ranking" height = '100%' width ='100%' />
   </p>
