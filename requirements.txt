@@ -1,0 +1,7 @@
+# conda
+selenium
+Pillow
+BeautifoulSoup
+pandas
+numpy
+

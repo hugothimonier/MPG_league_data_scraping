@@ -50,16 +50,15 @@ class MpgScrapper():
         {str} driver_type: type of driver to user for scrapping, default is Chrome
     '''
 
-    def __init__(self, user, pwd, nb_gw, nb_gamers, nb_seasons_played, user_team_name, driver_type='Chrome'):
+    def __init__(self, user, pwd, nb_gw, nb_gamers, nb_seasons_played, user_team_name):
 
-        assert driver_type in ['Firefox','Chrome'], 'Driver must be str(Chrhome) or str(Firefox)'
 
         self.user = user
         self.pwd = pwd
         self.nb_gw = nb_gw
         self.nb_gamers = nb_gamers
         self.nb_seasons_played = nb_seasons_played
-        self.driver = webdriver.Firefox() if driver_type=='Firefox' else webdriver.Chrome(chrome_options=chrome_options)
+        self.driver = webdriver.Chrome(chrome_options=chrome_options)
         self.url = 'https://mpg.football/?type=login'
         self.MPG_statistics = MPG_Statistics.MpgStatistics()
         self.user_team_name = user_team_name
