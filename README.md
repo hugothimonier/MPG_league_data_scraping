@@ -16,6 +16,8 @@ $ conda create --name mpgscrap
 $ conda activate mpgscrap
 $ conda install --force-reinstall -y -q --name py37 -c conda-forge --file requirements.txt
 ```
+
+One must also download Chromedriver. (https://chromedriver.chromium.org/)
 ### Usage
 
 To scrape data of league named 'MPG League':
