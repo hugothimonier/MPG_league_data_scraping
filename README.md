@@ -18,7 +18,7 @@ $ conda install --force-reinstall -y -q --name py37 -c conda-forge --file requir
 ```
 ### Usage
 
-To scrape data of league named '©':
+To scrape data of league named 'MPG League':
 
 ```python
 mpg_scraper = MPG_Scrapper.MpgScrapper(user=*username*, pwd=*password*, nb_gw=18, nb_gamers=10, nb_seasons_played=1, user_team_name=*your team name*)
@@ -35,12 +35,12 @@ game_scores, points, goal_average, vic_number, draw_number, los_number, series, 
 #### Compute league's ranking without home bonus :
 
 ```python
-game_scores, points, goal_average, vic_number, draw_number, los_number, series, goal_conceded, goal_scored = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data, no_bonus='home bonus')
+game_scores, points, goal_average, vic_number, draw_number, los_number, series, goal_conceded, goal_scored = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data, no_bonus="home bonus")
 ```
 #### Get image ranking based on recomputed ranking :
 
 ```python
-mpg_scrapper.get_ranking_image(points, vic_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name='League Name', out_img_name='new_ranking')
+mpg_scrapper.get_ranking_image(points, vic_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name="MPG League", out_img_name="new_ranking")
 ```
 #### Example of such generated image :
 
