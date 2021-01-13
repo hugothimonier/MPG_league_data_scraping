@@ -199,6 +199,7 @@ class MpgScrapper():
                 team_to_user[team_name_] = user_cor
                 ranking_previous[idx] = team_name_
 
+
         for idx, team_name in enumerate(ranking):
             if idx < target_man :
                 self.driver.execute_script(HTML_TEAMNAME_FILLING.format(str(idx), team_name))
