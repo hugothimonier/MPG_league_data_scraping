@@ -30,17 +30,17 @@ data = mpg_scrapper.get_league_data(league_name='MPG league')
 #### Compute league's ranking without bonus :
 
 ```python
-game_scores, points, goal_average, vic_number, draw_number, los_number, series, goal_conceded, goal_scored = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data)
+out = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data)
 ```
 #### Compute league's ranking without home bonus :
 
 ```python
-game_scores, points, goal_average, vic_number, draw_number, los_number, series, goal_conceded, goal_scored = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data, no_bonus="home bonus")
+out = mpg_scrapper.MPG_statistics.ranking_wo_bonus(dataframe=data, no_bonus="home bonus")
 ```
 #### Get image ranking based on recomputed ranking :
 
 ```python
-mpg_scrapper.get_ranking_image(points, vic_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name="MPG League", out_img_name="new_ranking")
+mpg_scrapper.get_ranking_image(points, win_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name="MPG League", out_img_name="new_ranking")
 ```
 #### Example of such generated image :
 
