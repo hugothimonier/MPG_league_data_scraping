@@ -48,7 +48,7 @@ mpg_scrapper.get_ranking_image(points, win_number, draw_number, los_number, seri
 
 ##### Original ranking 
 <p align="center">
-  <img src="https://github.com/hugothimonier/MPG_league_data_scrapping/blob/master/example_imgs/ranking.png" alt="Original Ranking" height = '100%' width ='100%' /> 
+  <img src="https://github.com/hugothimonier/MPG_league_data_scrapping/blob/master/example_imgs/ranking_before.png" alt="Original Ranking" height = '100%' width ='100%' /> 
 </p>
 
 ##### Recomputed ranking 
