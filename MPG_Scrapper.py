@@ -1,68 +1,97 @@
-import sys, argparse, os, time
+import os
+import time
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-
-from urllib.request import Request, urlopen
 
 from PIL import Image
 
 from bs4 import BeautifulSoup
 from pandas import DataFrame
-from numpy import mean
 from numpy import array
 
 import MPG_Statistics
 
-width, height = (952,550)
-LEFT = width - 70
-RIGHT = width - 9
-DOTS_LOCATION = [(24,33),(79,88),(134,143),(189,198),(244,253),(299,308),(354,363),(409,418),(464,473),(519,528)]
+LEFT = 882
+RIGHT = 943
+DOTS_LOCATION = [(24,33),(79,88),(134,143),(189,198),(244,253),\
+                 (299,308),(354,363),(409,418),(464,473),(519,528)]
 
 LEFT_JERSEY = 70
 RIGHT_JERSEY = 94
 JERSEY_LOCATION = [tuple(x) for x in [array([14,38])+55*i for i in range(0,10)]]
 PASTE_JERSEY_LOCATION = [(70, 14+55*i) for i in range(10)]
 
+EMAIL_ELEMENT_XPATH = '//*[@id="content"]/div/div/div[2]/div/div[2]/div[2]/div/form/div[1]/div/input'
+PASSWORD_ELEMENT_XPATH = '//*[@id="content"]/div/div/div[2]/div/div[2]/div[2]/div/form/div[2]/div/input'
+RANKING_ELEMENT_XPATH = '//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]'
+
+HTML_COLUMN_FILLING = "document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';"
+HTML_TEAMNAME_FILLING = "document.getElementsByClassName('index__root___12BYS index__playerTitleTextStyle___1r9ga index__padder___2MA83')[{}].innerHTML = '{}';"
+HTML_TARGETMAN_FILLING = "document.getElementsByClassName('index__root___12BYS index__targetManCroped___wTzNy index__padder___2MA83')[{}].innerHTML = '{}';"
+HTML_GAMER_FILLING = "document.getElementsByClassName('index__playerSubtitleTextStyle___3N6uc')[{}].innerHTML = '{}';"
+HTML_POINTS_FILLING = "document.getElementsByClassName('index__centerColumn___10x1Y index__textBold___14jFv')[{}].innerHTML = '{}';"
+
 chrome_options = Options()
 chrome_options.add_argument("--window-size=1920,2000")
 
-class MPG_Scrapper():
+class MpgScrapper():
 
-    def __init__(self, user, pwd, nb_gw, nb_gamers, user_team_name):
+    '''
+    MpgScrapper allows to scrap MPG league data
+    @args:
+        {str} user: user_name in the form a email adress
+        {str} pwd: password for your account
+        {int} nb_gw: number of game weeks that have been played
+        {int} nb_gamers: number of players in the league
+        {int} nb_seasons_played: number of times the league has been restarted, it is the fifth time you play in the league then nb_seasons_played=5
+        {str} user_team_name: name of your team in the league
+        {str} driver_type: type of driver to user for scrapping, default is Chrome
+    '''
+
+    def __init__(self, user, pwd, nb_gw, nb_gamers, nb_seasons_played, user_team_name, driver_type='Chrome'):
+
+        assert driver_type in ['Firefox','Chrome'], 'Driver must be str(Chrhome) or str(Firefox)'
 
         self.user = user
         self.pwd = pwd
         self.nb_gw = nb_gw
         self.nb_gamers = nb_gamers
-        self.driver = webdriver.Chrome(chrome_options=chrome_options)
+        self.nb_seasons_played = nb_seasons_played
+        self.driver = webdriver.Firefox() if driver_type=='Firefox' else webdriver.Chrome(chrome_options=chrome_options)
         self.url = 'https://mpg.football/?type=login'
-        self.MPG_statistics = MPG_Statistics.MPG_Statistics()
+        self.MPG_statistics = MPG_Statistics.MpgStatistics()
         self.user_team_name = user_team_name
-        #self.MPG_image = MPG_Image.MPG_Image()
 
     def open_page(self, url=None):
+
+        '''
+        open page url
+        '''
 
         if not url:
             url = self.url
         self.driver.get(url)
 
-        return None
-
     def connect(self):
 
-        emailElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div[2]/div/div[2]/div[2]/div/form/div[1]/div/input')
-        passwordElement = self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div[2]/div/div[2]/div[2]/div/form/div[2]/div/input')
+        '''
+        connect to account
+        '''
 
-        emailElement.send_keys(self.user)
-        passwordElement.send_keys(self.pwd)
-        passwordElement.send_keys(Keys.ENTER)
+        email_element =  self.driver.find_element_by_xpath(EMAIL_ELEMENT_XPATH)
+        password_element = self.driver.find_element_by_xpath(PASSWORD_ELEMENT_XPATH)
 
-        return None
+        email_element.send_keys(self.user)
+        password_element.send_keys(self.pwd)
+        password_element.send_keys(Keys.ENTER)
 
     def find_league_href(self, name=None):
+
+        '''
+        find league href based on league name to access its url
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -73,6 +102,10 @@ class MPG_Scrapper():
         return href
 
     def find_users(self):
+
+        '''
+        find user team names
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -88,14 +121,11 @@ class MPG_Scrapper():
 
         return teams_in_game
 
-    def get_ranking_from_points(self, points):
-
-        teams = list(points.keys())
-        ranking = sorted(teams, key=points.get, reverse=True)
-
-        return ranking
-
     def find_targetman_idx(self):
+
+        '''
+        find the target man
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -104,35 +134,24 @@ class MPG_Scrapper():
             if 'index__root___12BYS index__targetManCroped___wTzNy index__padder___2MA83' in str(element):
                 return idx
 
-    def generate_img_series(self, series, color='white'):
-    
-        red = Image.open('./dots/{}/red.png'.format(color))
-        green = Image.open('./dots/{}/green.png'.format(color))
-        grey = Image.open('./dots/{}/grey.png'.format(color))
-        inter = Image.open('./dots/{}/inter.png'.format(color))
-        out_image = Image.new('RGB', (61,9))
-        last_five = series[-5:]
-        x = 0
-        for i in range(5):
-            if last_five[i]=='V':
-                out_image.paste(green, (x,0))
-                x += 9
-                out_image.paste(inter, (x, 0))
-                x += 4
-            if last_five[i]=='L':
-                out_image.paste(red, (x,0))
-                x += 9
-                out_image.paste(inter, (x, 0))
-                x += 4
-            if last_five[i]=='D':
-                out_image.paste(grey, (x,0))
-                x += 9
-                out_image.paste(inter, (x, 0))
-                x += 4
-    
-        return out_image               
+    def get_ranking_image(self, points, vic_number, draw_number, los_number, series, goal_average, goal_conceded, goal_scored, league_name=None, out_img_name='ranking_nobonus'):
 
-    def get_ranking_image(self, points, vic_number, goal_average, draw_number, los_number, series, goal_conceded, goal_scored, league_name=None, out_img_name='ranking_nobonus'):
+        '''
+        return a ranking image from MPG template, based on a recomputed ranking
+        @args:
+            {dict} points: keys(): team name, values(): number of points
+            {dict} vic_number: keys(): team name, values(): number of wins
+            {dict} draw_number: keys(): team name, values(): number of draws
+            {dict} los_number: keys(): team name, values(): number of losses
+            {dict} series: keys(): team name, values(): ('W','D','L') series
+            {dict} goal_average: keys(): team name, values(): goal average
+            {dict} goal_conceded: keys(): team name, values(): goal conceded
+            {dict} goal_scored: keys(): team name, values(): goal scored
+            {str} league_name: league name to built ranking on
+            {str} out_img_name: name of png file to save
+        @returns:
+            None, saves directly img
+        '''
 
         self.open_page()
         self.driver.implicitly_wait(10)
@@ -145,29 +164,24 @@ class MPG_Scrapper():
         self.open_page(url=ranking_url)
         self.driver.maximize_window()
 
-        rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
-        location = rankingElement.location
-        size = rankingElement.size
+        ranking_element =  self.driver.find_element_by_xpath(RANKING_ELEMENT_XPATH)
+        location = ranking_element.location
+        size = ranking_element.size
         self.driver.set_window_position(0, 0)
         self.driver.set_window_size(1920, 2000)
-        rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
-        location = rankingElement.location
-        size = rankingElement.size
+        ranking_element =  self.driver.find_element_by_xpath(RANKING_ELEMENT_XPATH)
+        location = ranking_element.location
+        size = ranking_element.size
 
-        rankingElement =  self.driver.find_element_by_xpath('//*[@id="content"]/div/div/div/div[2]/div/div/div/div/div/div/div[3]')
-        location = rankingElement.location
-        size = rankingElement.size
+        ranking_element =  self.driver.find_element_by_xpath(RANKING_ELEMENT_XPATH)
+        location = ranking_element.location
+        size = ranking_element.size
 
-        size_ = self.driver.get_window_size()
-        print("Window size: width = {}px, height = {}px".format(size_["width"], size_["height"]))
-
-
-        ranking = self.get_ranking_from_points(points)
+        ranking = get_ranking_from_points(points)
         print(ranking)
         target_man = self.find_targetman_idx()
 
-        Team_to_user = dict()
-        Team_to_jersey = dict()
+        team_to_user = dict()
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -177,49 +191,48 @@ class MPG_Scrapper():
             if idx < target_man or idx > target_man :
                 team_name_ = element.find('a', attrs={'class':'index__root___12BYS index__playerTitleTextStyle___1r9ga index__padder___2MA83'}).text
                 user_cor = element.find('div', attrs={'class':'index__playerSubtitleTextStyle___3N6uc'}).text
-                Team_to_user[team_name_] = user_cor
-                ranking_previous[idx] = team_name_ 
+                team_to_user[team_name_] = user_cor
+                ranking_previous[idx] = team_name_
 
             if idx == target_man:
                 team_name_ = element.find('a', attrs={'class':'index__root___12BYS index__targetManCroped___wTzNy index__padder___2MA83'}).text
                 user_cor = element.find('div', attrs={'class':'index__playerSubtitleTextStyle___3N6uc'}).text
-                Team_to_user[team_name_] = user_cor
-                ranking_previous[idx] = team_name_ 
+                team_to_user[team_name_] = user_cor
+                ranking_previous[idx] = team_name_
 
         for idx, team_name in enumerate(ranking):
             if idx < target_man :
-                self.driver.execute_script("document.getElementsByClassName('index__root___12BYS index__playerTitleTextStyle___1r9ga index__padder___2MA83')[{}].innerHTML = '{}';".format(str(idx), team_name))
-                self.driver.execute_script("document.getElementsByClassName('index__playerSubtitleTextStyle___3N6uc')[{}].innerHTML = '{}';".format(str(idx), Team_to_user[team_name]))
-                self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textBold___14jFv')[{}].innerHTML = '{}';".format(str(idx), str(points[team_name])))
+                self.driver.execute_script(HTML_TEAMNAME_FILLING.format(str(idx), team_name))
+                self.driver.execute_script(HTML_GAMER_FILLING.format(str(idx), team_to_user[team_name]))
+                self.driver.execute_script(HTML_POINTS_FILLING.format(str(idx), str(points[team_name])))
                 time.sleep(1)
             if idx == target_man :
-                self.driver.execute_script("document.getElementsByClassName('index__root___12BYS index__targetManCroped___wTzNy index__padder___2MA83')[{}].innerHTML = '{}';".format(str(0), team_name))
-                self.driver.execute_script("document.getElementsByClassName('index__playerSubtitleTextStyle___3N6uc')[{}].innerHTML = '{}';".format(str(idx), Team_to_user[team_name]))
-                self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textBold___14jFv')[{}].innerHTML = '{}';".format(str(idx), str(points[team_name])))
+                self.driver.execute_script(HTML_TARGETMAN_FILLING.format(str(0), team_name))
+                self.driver.execute_script(HTML_GAMER_FILLING.format(str(idx), team_to_user[team_name]))
+                self.driver.execute_script(HTML_POINTS_FILLING.format(str(idx), str(points[team_name])))
             if idx > target_man :
-                self.driver.execute_script("document.getElementsByClassName('index__root___12BYS index__playerTitleTextStyle___1r9ga index__padder___2MA83')[{}].innerHTML = '{}';".format(str(idx-1), team_name))
-                self.driver.execute_script("document.getElementsByClassName('index__playerSubtitleTextStyle___3N6uc')[{}].innerHTML = '{}';".format(str(idx), Team_to_user[team_name]))
-                self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textBold___14jFv')[{}].innerHTML = '{}';".format(str(idx), str(points[team_name])))
+                self.driver.execute_script(HTML_TEAMNAME_FILLING.format(str(idx-1), team_name))
+                self.driver.execute_script(HTML_GAMER_FILLING.format(str(idx), team_to_user[team_name]))
+                self.driver.execute_script(HTML_POINTS_FILLING.format(str(idx), str(points[team_name])))
                 time.sleep(1)
 
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(9+7*idx, vic_number[team_name]))
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(10+7*idx, draw_number[team_name]))
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(11+7*idx, los_number[team_name]))
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(12+7*idx, goal_scored[team_name]))
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(13+7*idx, goal_conceded[team_name]))
-            self.driver.execute_script("document.getElementsByClassName('index__centerColumn___10x1Y index__textDesign___ZYGit')[{}].innerHTML = '{}';".format(14+7*idx, goal_average[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(9+7*idx, vic_number[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(10+7*idx, draw_number[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(11+7*idx, los_number[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(12+7*idx, goal_scored[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(13+7*idx, goal_conceded[team_name]))
+            self.driver.execute_script(HTML_COLUMN_FILLING.format(14+7*idx, goal_average[team_name]))
 
         self.driver.save_screenshot("./pageImage.png")
 
         self.driver.quit()
 
-        x = location['x'];
-        y = location['y'];
-        width = location['x']+size['width'];
-        height = location['y']+size['height'];
+        x = location['x']
+        y = location['y']
+        width_rank = location['x']+size['width']
+        height_rank = location['y']+size['height']
         im = Image.open('pageImage.png')
-        im2 = im.crop((int(x), int(y), int(width), int(height)))
-        #im2.save('ranking_before.png')
+        im2 = im.crop((int(x), int(y), int(width_rank), int(height_rank)))
 
         for i in range(self.nb_gamers):
             jersey = im2.crop((LEFT_JERSEY, JERSEY_LOCATION[i][0], RIGHT_JERSEY, JERSEY_LOCATION[i][1]))
@@ -234,7 +247,7 @@ class MPG_Scrapper():
 
         for i in range(self.nb_gamers):
             color = 'grey' if i==grey_location else 'white'
-            dot_series = self.generate_img_series(series[ranking[i]], color=color)
+            dot_series = generate_img_series(series[ranking[i]], color=color)
             im2.paste(dot_series, (LEFT,DOTS_LOCATION[i][0]))
         im2.save('{}.png'.format(out_img_name))
 
@@ -243,6 +256,12 @@ class MPG_Scrapper():
 
 
     def find_score(self):
+
+        '''
+        find game scores for a game
+        @returns:
+            {list}
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -259,6 +278,12 @@ class MPG_Scrapper():
 
     def find_formation(self):
 
+        '''
+        find home and away composition for a game
+        @returns:
+            {list} composition list
+        '''
+
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         formation_home = soup.find_all("div", class_="pitch pitch-horizontal pitch-top")
@@ -273,6 +298,12 @@ class MPG_Scrapper():
         return formations
 
     def find_bonus(self):
+
+        '''
+        find home and away bonus
+        @returns:
+            {list} bonus lists
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -303,16 +334,12 @@ class MPG_Scrapper():
             bonus_home.remove('Chapron rouge')
             chap = bonus_blocs[0].find_all('div', class_='index__bonusNameChapron___247kV')
             player_removed = chap[0].renderContents()
-            #start = str(bonus_blocs[0]).find('247kV\"><br>') + len('247kV\"><br>')
-            #end = str(bonus_blocs[0]).find('</')
             bonus_home.append(['Chapron rouge', str(player_removed).replace('<br/>','')])
 
         if 'Chapron rouge' in bonus_away :
             bonus_away.remove('Chapron rouge')
             chap = bonus_blocs[1].find_all('div', class_='index__bonusNameChapron___247kV')
             player_removed = chap[0].renderContents()
-            #start = str(bonus_blocs[1]).find('247kV\"><br>') + len('247kV\"><br>')
-            #end = str(bonus_blocs[1]).find('</')
             bonus_away.append(['Chapron rouge', str(player_removed).replace('<br/>','')])
 
         if 'Uber Eats' in bonus_home :
@@ -335,6 +362,12 @@ class MPG_Scrapper():
         return bonus_home, bonus_away
 
     def find_scorer(self):
+
+        '''
+        find home and away scorer list
+        @returns:
+            {list} list of scorers
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -364,7 +397,7 @@ class MPG_Scrapper():
                     scorer = [scorer, str(number_of_goals)]
                 scorer_list_home.append(scorer)
 
-        for scorer_home in scorers_raw_away:
+        for scorer_away in scorers_raw_away:
             for scorer in scorers_raw_away:
                 divs = scorer.find_all('div', class_=None)
             for div in divs :
@@ -388,6 +421,12 @@ class MPG_Scrapper():
         return scorer_list_home, scorer_list_away
 
     def find_players_grade(self):
+
+        '''
+        find home and away players grades
+        @returns:
+            {dict} keys(): player names, values(): {list} containing [goal number, no bonus grade, bonus grade, after bonus grade]
+        '''
 
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
@@ -428,7 +467,7 @@ class MPG_Scrapper():
             if goals == 0 :
                 goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__mpg___uUgmt index__root___2XTpz jss6")))
 
-            note = tbody.find_all('td', class_="index__rating___3aKs0")[0].renderContents() if len(tbody.find_all('td', class_="index__rating___3aKs0"))==1 else tbody.find_all('td', class_="index__rating___3aKs0")[1].renderContents() 
+            note = tbody.find_all('td', class_="index__rating___3aKs0")[0].renderContents() if len(tbody.find_all('td', class_="index__rating___3aKs0"))==1 else tbody.find_all('td', class_="index__rating___3aKs0")[1].renderContents()
             bonus = tbody.find_all('td', class_="index__bonus___3iE2K")[0].renderContents() if len(tbody.find_all('td', class_="index__bonus___3iE2K"))==1 else tbody.find_all('td', class_="index__bonus___3iE2K")[1].renderContents()
             if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")) > 0 :
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")[1].renderContents()
@@ -436,13 +475,13 @@ class MPG_Scrapper():
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur")[1].renderContents()
             if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")) > 0 :
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")[1].renderContents()
-            
+
             if final_note == b'':
                 final_note = str(float(note) + float(bonus))
 
             if name == 'Rotaldo':
                 home_rotaldo += 1
-                name == 'Rotaldo-' + str(home_rotaldo)
+                name = 'Rotaldo-' + str(home_rotaldo)
             players_home[name] = [goals, note, bonus, final_note]
 
 
@@ -461,7 +500,7 @@ class MPG_Scrapper():
                 goals = [str(len(tbody.find_all("span", class_="index__ball___39Bld index__root___2XTpz jss6"))), 'Canceled by keeper']
 
             goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__root___2XTpz jss6")))
-            note = tbody.find_all('td', class_="index__rating___3aKs0")[0].renderContents() if len(tbody.find_all('td', class_="index__rating___3aKs0"))==1 else tbody.find_all('td', class_="index__rating___3aKs0")[1].renderContents() 
+            note = tbody.find_all('td', class_="index__rating___3aKs0")[0].renderContents() if len(tbody.find_all('td', class_="index__rating___3aKs0"))==1 else tbody.find_all('td', class_="index__rating___3aKs0")[1].renderContents()
             bonus = tbody.find_all('td', class_="index__bonus___3iE2K")[0].renderContents() if len(tbody.find_all('td', class_="index__bonus___3iE2K"))==1 else tbody.find_all('td', class_="index__bonus___3iE2K")[1].renderContents()
             if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")) > 0 :
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u")[1].renderContents()
@@ -469,25 +508,33 @@ class MPG_Scrapper():
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMax___2iFur")[1].renderContents()
             if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")) > 0 :
                 final_note = tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")[0].renderContents() if len(tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD"))==1 else tbody.find_all('td', class_="index__column___18Jlk index__final___3Z8fz index__finalResult___1RG2u index__finalMin___15hJD")[1].renderContents()
-            
+
             if final_note == b'':
                 final_note = str(float(note) + float(bonus))
 
             if name == 'Rotaldo':
                 away_rotaldo += 1
-                name == 'Rotaldo-' + str(away_rotaldo)
+                name = 'Rotaldo-' + str(away_rotaldo)
             players_away[name] = [goals, note, bonus, final_note]
 
         return players_home, players_away
 
     def find_player_grade(self, player_name, formation, home=True):
 
+        '''
+        find player grade based on name, function used when crazy ref bonus is used
+        @args:
+            {str} player_name: player name for whom you wish to find grade
+            {str} formation: composition of team for which player plays
+            {bool} home: whether team for which player plays is home or away team
+        '''
+
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         defense = [*range(1, int(formation[0])+1)]
         midfield = [*range(int(formation[0])+1, int(formation[0])+ int(formation[1])+1)]
         attack = [*range(int(formation[0])+int(formation[1])+1, 11)]
-        
+
         if home :
             results = soup.find_all('div', class_="index__resultsHome___3FXvp")
         if not home :
@@ -517,7 +564,7 @@ class MPG_Scrapper():
                 if str(player_name) in str(detail):
                     goals = str(len(tbody.find_all("span", class_="index__ball___39Bld index__root___2XTpz jss6")))
                     note = tbody.find_all('td', class_="index__rating___3aKs0")[idx].renderContents()
-                    bonus = tbody.find_all('td', class_="index__bonus___3iE2K")[idx].renderContents() 
+                    bonus = tbody.find_all('td', class_="index__bonus___3iE2K")[idx].renderContents()
                     print(note, bonus)
                     final_note = str(float(note) + float(bonus))
                     home = True
@@ -534,16 +581,16 @@ class MPG_Scrapper():
             {str} league_name : name of league to scrap data from
         @returns:
             {pandas.DataFrame} dataframe containing for each row data on several key variables such as :
-                              {str} 'team_home' : name of home team 
-                              {str} 'team_away' : name of away team 
-                              {str} 'GW' : game week 
+                              {str} 'team_home' : name of home team
+                              {str} 'team_away' : name of away team
+                              {str} 'GW' : game week
                               {str} 'score'
-                              {str} 'winner' : winner of the game 
+                              {str} 'winner' : winner of the game
                               {int} 'goal home' : number of home goals
                               {int} 'goal away' : number of away goals
-                              {str} 'formation home' : home team formation 
+                              {str} 'formation home' : home team formation
                               {str} 'formation away' : away team formation
-                              {str} 'bonus home' : bonus chosen by home team 
+                              {str} 'bonus home' : bonus chosen by home team
                               {str} 'bonus away' : bonus chosen by away team
                               {list} 'scorer home' : list of home scorers, 'But MPG' if MPG Goal, if list contains list of player name + int, int represents number of goals
                               {list} 'scorer away' : list of away scorers ...etc
@@ -571,7 +618,7 @@ class MPG_Scrapper():
         for i in range(1, self.nb_gw+1):
             for j in range(1, nb_match+1):
                 print('Journée {}, match {}'.format(i,j))
-                match_url = league_url + '/detail/{}_{}_{}'.format(nb_match, i, j)
+                match_url = league_url + '/detail/{}_{}_{}'.format(self.nb_seasons_played, i, j)
                 self.open_page(url=match_url)
                 time.sleep(2)
                 users = self.find_users()
@@ -590,8 +637,8 @@ class MPG_Scrapper():
                 bonus_home, bonus_away = self.find_bonus()
                 scorer_home, scorer_away = self.find_scorer()
                 player_grades_home, player_grades_away = self.find_players_grade()
-                self.add_position(player_grades_home, formation[0])
-                self.add_position(player_grades_away, formation[1])
+                add_position(player_grades_home, formation[0])
+                add_position(player_grades_away, formation[1])
                 if any('Chapron rouge' in sublist for sublist in bonus_home):
                     for bonus in bonus_home:
                         if 'Chapron rouge' in bonus :
@@ -600,10 +647,10 @@ class MPG_Scrapper():
                     excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
                     excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
                     print(excluded_player_home, excluded_player_away)
-                    if type(excluded_player_home) is not type(None):
+                    if not isinstance(excluded_player_home, type(None)):
                         excluded_player_home.append('excluded by Chapron Rouge')
                         player_grades_home[player_name] = excluded_player_home
-                    if type(excluded_player_away) is not type(None):
+                    if not isinstance(excluded_player_away, type(None)):
                         excluded_player_away.append('excluded by Chapron Rouge')
                         player_grades_away[player_name] = excluded_player_away
 
@@ -615,50 +662,96 @@ class MPG_Scrapper():
                     excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
                     excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
                     print(excluded_player_home, excluded_player_away)
-                    if type(excluded_player_home) is not type(None):
+                    if not isinstance(excluded_player_home, type(None)):
                         excluded_player_home.append('excluded by Chapron Rouge')
                         player_grades_home[player_name] = excluded_player_home
-                    if type(excluded_player_away) is not type(None):
+                    if not isinstance(excluded_player_away, type(None)):
                         excluded_player_away.append('excluded by Chapron Rouge')
                         player_grades_away[player_name] = excluded_player_away
                 time.sleep(5)
-                game_data = DataFrame(columns=columns)
 
                 data_general.loc[len(data_general)] = [users[0], users[1], i, score, winner, score[0], score[1], formation[0], formation[1],
-                 bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away] 
+                 bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away]
 
-        return data_general 
-
-
-    def add_position(self, player_grades, formation):
-
-        defense = [*range(1, int(formation[0])+1)]
-        midfield = [*range(int(formation[0])+1, int(formation[0])+ int(formation[1])+1)]
-        attack = [*range(int(formation[0])+int(formation[1])+1, 11)]
-
-        for idx, key in enumerate(player_grades.keys()):
-            if idx==0 :
-                player_grades.setdefault(key, []).append('G')
-            if idx in defense:
-                player_grades.setdefault(key, []).append('D')
-            if idx in midfield:
-                player_grades.setdefault(key, []).append('M')
-            if idx in attack:
-                player_grades.setdefault(key, []).append('A')
-
-        return None 
+        return data_general
 
 
+def add_position(player_grades, formation):
+
+    '''
+    add position to player grades for each player
+    @args:
+        {dict} player_grades: keys(): player name, values(): {list} containing player's grades
+        {str} formation: composition of team
+    @returns:
+        None, modifies original player_grades dictionnary by adding the position of the player 'A': attack, 'M':midfield, 'D': defense, 'G': keeper
+    '''
+
+    defense = [*range(1, int(formation[0])+1)]
+    midfield = [*range(int(formation[0])+1, int(formation[0])+ int(formation[1])+1)]
+    attack = [*range(int(formation[0])+int(formation[1])+1, 11)]
+
+    for idx, key in enumerate(player_grades.keys()):
+        if idx==0 :
+            player_grades.setdefault(key, []).append('G')
+        if idx in defense:
+            player_grades.setdefault(key, []).append('D')
+        if idx in midfield:
+            player_grades.setdefault(key, []).append('M')
+        if idx in attack:
+            player_grades.setdefault(key, []).append('A')
 
 
+def get_ranking_from_points(points):
+
+    '''
+    returns team ranking based on points
+    @args:
+        {dict} points: keys() : team name, values() : number of points
+    @returns:
+        {list} ordered list based on number of points
+    '''
+
+    teams = list(points.keys())
+    ranking = sorted(teams, key=points.get, reverse=True)
+
+    return ranking
 
 
+def generate_img_series(series, color='white'):
 
+    '''
+    generates an image containing a series of five dots which color depends on the 5 previous match results
+    @args:
+        {list} series: ordered previous results in the form 'W', 'L', 'D'
+        {color} str: whether color of background must be white or grey for the img
+    @returns:
+        {PIL.Image}
+    '''
 
+    assert color in ['white','grey']
+    red = Image.open('./dots/{}/red.png'.format(color))
+    green = Image.open('./dots/{}/green.png'.format(color))
+    grey = Image.open('./dots/{}/grey.png'.format(color))
+    inter = Image.open('./dots/{}/inter.png'.format(color))
+    out_image = Image.new('RGB', (61,9))
+    last_five = series[-5:]
+    pixel_loc = 0
+    for i in range(5):
+        if last_five[i]=='V':
+            out_image.paste(green, (pixel_loc,0))
+            pixel_loc += 9
+            out_image.paste(inter, (pixel_loc, 0))
+            pixel_loc += 4
+        if last_five[i]=='L':
+            out_image.paste(red, (pixel_loc,0))
+            pixel_loc += 9
+            out_image.paste(inter, (pixel_loc, 0))
+            pixel_loc += 4
+        if last_five[i]=='D':
+            out_image.paste(grey, (pixel_loc,0))
+            pixel_loc += 9
+            out_image.paste(inter, (pixel_loc, 0))
+            pixel_loc += 4
 
-
-
-
-
-    
-    
+    return out_image
