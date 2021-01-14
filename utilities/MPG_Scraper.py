@@ -36,7 +36,7 @@ HTML_POINTS_FILLING = "document.getElementsByClassName('index__centerColumn___10
 chrome_options = Options()
 chrome_options.add_argument("--window-size=1920,2000")
 
-class MpgScrapper():
+class MpgScraper():
 
     '''
     MpgScrapper allows to scrap MPG league data

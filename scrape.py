@@ -3,7 +3,7 @@ import sys
 import argparse
 sys.path.append('./utilities/')
 
-from MPG_Scrapper import MpgScrapper
+from MPG_Scraper import MpgScraper
 
 
 if __name__ == "__main__":
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     opts = parser.parse_args()
 
-    mpg_scrapper = MpgScrapper(user=opts.user, pwd=opts.pwd, nb_gw=opts.nb_gw, nb_gamers=opts.nb_teams, nb_seasons_played=opts.nb_seasons, user_team_name=opts.team_name)
+    mpg_scrapper = MpgScraper(user=opts.user, pwd=opts.pwd, nb_gw=opts.nb_gw, nb_gamers=opts.nb_teams, nb_seasons_played=opts.nb_seasons, user_team_name=opts.team_name)
     data = mpg_scrapper.get_league_data(league_name=opts.league_name)
     data.to_json('./{}.json'.format(opts.json_file))
 
