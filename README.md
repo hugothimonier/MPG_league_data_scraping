@@ -9,15 +9,23 @@ $ git clone https://github.com/hugothimonier/MPG_league_data_scrapping.git
 $ cd MPG_league_data_scrapping/
 ```
 
-### Requirements
+## Requirements
+
+#### set environment
 
 ```bash
 $ conda create --name mpgscrap
 $ conda activate mpgscrap
 $ pip3 install -r requirements.txt
 ```
+#### Chromedriver
 
-One must also download Chromedriver. (https://chromedriver.chromium.org/)
+One must also install Chromedriver. (https://chromedriver.chromium.org/). Note that for Chromedriver to operate, one needs Google Chrome to be installed.
+For MacOS it is available via ``brew`` through the following command :
+```bash
+brew install chromedrive
+```
+
 ### Usage
 
 To scrape data of league named 'MPG League':
