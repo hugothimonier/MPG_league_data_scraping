@@ -21,6 +21,7 @@ $ pip3 install -r requirements.txt
 #### Chromedriver
 
 One must also install Chromedriver. (https://chromedriver.chromium.org/). Note that for Chromedriver to operate, one needs Google Chrome to be installed.
+
 For MacOS it is available via ``brew`` through the following command :
 ```bash
 brew install chromedrive
