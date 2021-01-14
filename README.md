@@ -29,7 +29,7 @@ $ brew install chromedrive
 
 ### Usage
 
-To scrape data of league named 'MPG League', and save it as ``mpg_data.json`` 
+To scrape data of league named 'MPG League', and save it as a json file: 
 
 ```bash
 $ cd MPG_league_data_scrapping/
