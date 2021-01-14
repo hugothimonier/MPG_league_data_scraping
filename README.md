@@ -24,7 +24,7 @@ One must also install Chromedriver. (https://chromedriver.chromium.org/). Note t
 
 For MacOS it is available via ``brew`` through the following command :
 ```bash
-$ brew install chromedrive
+$ brew install chromedriver
 ```
 
 ### Usage
