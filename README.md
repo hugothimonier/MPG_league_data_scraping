@@ -1,6 +1,6 @@
 ## Scrapping data from your MPG League 
 
-This repo allows you to scrape data from a league in which you participate. Scraping involves data from games of all seasons played. Variable are stacked in a ``pandas.DataFrame``, detail on column signification is detailed in ``MpgScraper.get_league_data()`` docstring.
+This repo allows you to scrape data from a league in which you participate. Scraping involves data from games of all seasons played. Variable are stacked in a ``pandas.DataFrame``, columns are detailed in ``MpgScraper.get_league_data()`` docstring.
 
 
 ### Clone repo
