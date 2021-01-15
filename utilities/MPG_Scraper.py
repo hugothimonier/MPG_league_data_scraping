@@ -581,6 +581,7 @@ class MpgScraper():
             {pandas.DataFrame} dataframe containing for each row data on several key variables such as :
                               {str} 'team_home' : name of home team
                               {str} 'team_away' : name of away team
+                              {str} 'season' : season number
                               {str} 'GW' : game week
                               {str} 'score'
                               {str} 'winner' : winner of the game
@@ -596,7 +597,7 @@ class MpgScraper():
                               {dict} 'player_grades away' : dictionnary with keys away players name ... etc
         '''
 
-        columns = ['team_home', 'team_away', 'Season', 'GW', 'score', 'winner', 'goal home', 'goal away',
+        columns = ['team_home', 'team_away', 'season', 'GW', 'score', 'winner', 'goal home', 'goal away',
         'formation home', 'formation away', 'bonus home', 'bonus away', 'scorer home', 'scorer away',
         'player_grades home', 'player_grades away']
         data_general = DataFrame(columns=columns)
