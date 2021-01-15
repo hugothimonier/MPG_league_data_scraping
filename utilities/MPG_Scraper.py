@@ -571,8 +571,6 @@ class MpgScraper():
 
                     return [goals, note, bonus, final_note, position]
 
-
-
     def get_league_data(self, league_name=None):
 
         '''
@@ -598,7 +596,7 @@ class MpgScraper():
                               {dict} 'player_grades away' : dictionnary with keys away players name ... etc
         '''
 
-        columns = ['team_home', 'team_away', 'GW', 'score', 'winner', 'goal home', 'goal away',
+        columns = ['team_home', 'team_away', 'Season', 'GW', 'score', 'winner', 'goal home', 'goal away',
         'formation home', 'formation away', 'bonus home', 'bonus away', 'scorer home', 'scorer away',
         'player_grades home', 'player_grades away']
         data_general = DataFrame(columns=columns)
@@ -612,66 +610,67 @@ class MpgScraper():
         href = self.find_league_href(name=league_name)
 
         league_url = 'https://mpg.football' + href.replace('wall', 'results')
-
         nb_match = int(self.nb_gamers/2)
+        for z in range(1, self.nb_seasons_played):
+            for i in range(1, self.nb_gw+1):
+                for j in range(1, nb_match+1):
+                    print('Saison {}, Journée {}, match {}'.format(z,i,j))
+                    match_url = league_url + '/detail/{}_{}_{}'.format(z, i, j)
+                    self.open_page(url=match_url)
+                    time.sleep(2)
+                    users = self.find_users()
+                    
 
-        for i in range(1, self.nb_gw+1):
-            for j in range(1, nb_match+1):
-                print('Journée {}, match {}'.format(i,j))
-                match_url = league_url + '/detail/{}_{}_{}'.format(self.nb_seasons_played, i, j)
-                self.open_page(url=match_url)
-                time.sleep(2)
-                users = self.find_users()
+                    score = self.find_score()
+                    dif = score[0] - score[1]
 
-                score = self.find_score()
-                dif = score[0] - score[1]
+                    if dif == 0:
+                        winner = 'draw'
+                    if dif > 0 :
+                        winner = 'home'
+                    if dif < 0 :
+                        winner = 'away'
 
-                if dif == 0:
-                    winner = 'draw'
-                if dif > 0 :
-                    winner = 'home'
-                if dif < 0 :
-                    winner = 'away'
+                    formation = self.find_formation()
+                    bonus_home, bonus_away = self.find_bonus()
+                    scorer_home, scorer_away = self.find_scorer()
+                    player_grades_home, player_grades_away = self.find_players_grade()
+                    add_position(player_grades_home, formation[0])
+                    add_position(player_grades_away, formation[1])
+                    if any('Chapron rouge' in sublist for sublist in bonus_home):
+                        for bonus in bonus_home:
+                            if 'Chapron rouge' in bonus :
+                                player_name = bonus[1].replace('b\'','')
+                                player_name = player_name.replace('\'','')
+                        excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
+                        excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
+                        print(excluded_player_home, excluded_player_away)
+                        if not isinstance(excluded_player_home, type(None)):
+                            excluded_player_home.append('excluded by Chapron Rouge')
+                            player_grades_home[player_name] = excluded_player_home
+                        if not isinstance(excluded_player_away, type(None)):
+                            excluded_player_away.append('excluded by Chapron Rouge')
+                            player_grades_away[player_name] = excluded_player_away
 
-                formation = self.find_formation()
-                bonus_home, bonus_away = self.find_bonus()
-                scorer_home, scorer_away = self.find_scorer()
-                player_grades_home, player_grades_away = self.find_players_grade()
-                add_position(player_grades_home, formation[0])
-                add_position(player_grades_away, formation[1])
-                if any('Chapron rouge' in sublist for sublist in bonus_home):
-                    for bonus in bonus_home:
-                        if 'Chapron rouge' in bonus :
-                            player_name = bonus[1].replace('b\'','')
-                            player_name = player_name.replace('\'','')
-                    excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
-                    excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
-                    print(excluded_player_home, excluded_player_away)
-                    if not isinstance(excluded_player_home, type(None)):
-                        excluded_player_home.append('excluded by Chapron Rouge')
-                        player_grades_home[player_name] = excluded_player_home
-                    if not isinstance(excluded_player_away, type(None)):
-                        excluded_player_away.append('excluded by Chapron Rouge')
-                        player_grades_away[player_name] = excluded_player_away
+                    if any('Chapron rouge' in sublist for sublist in bonus_away):
+                        for bonus in bonus_away:
+                            if 'Chapron rouge' in bonus :
+                                player_name = bonus[1].replace('b\'','')
+                                player_name = player_name.replace('\'','')
+                        excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
+                        excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
+                        print(excluded_player_home, excluded_player_away)
+                        if not isinstance(excluded_player_home, type(None)):
+                            excluded_player_home.append('excluded by Chapron Rouge')
+                            player_grades_home[player_name] = excluded_player_home
+                        if not isinstance(excluded_player_away, type(None)):
+                            excluded_player_away.append('excluded by Chapron Rouge')
+                            player_grades_away[player_name] = excluded_player_away
+                    time.sleep(5)
 
-                if any('Chapron rouge' in sublist for sublist in bonus_away):
-                    for bonus in bonus_away:
-                        if 'Chapron rouge' in bonus :
-                            player_name = bonus[1].replace('b\'','')
-                            player_name = player_name.replace('\'','')
-                    excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
-                    excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
-                    print(excluded_player_home, excluded_player_away)
-                    if not isinstance(excluded_player_home, type(None)):
-                        excluded_player_home.append('excluded by Chapron Rouge')
-                        player_grades_home[player_name] = excluded_player_home
-                    if not isinstance(excluded_player_away, type(None)):
-                        excluded_player_away.append('excluded by Chapron Rouge')
-                        player_grades_away[player_name] = excluded_player_away
-                time.sleep(5)
 
-                data_general.loc[len(data_general)] = [users[0], users[1], i, score, winner, score[0], score[1], formation[0], formation[1],
-                 bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away]
+                    data_general.loc[len(data_general)] = [users[0], users[1], z, i, score, winner, score[0], score[1], formation[0], formation[1],
+                                                           bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away]
 
         return data_general
 
