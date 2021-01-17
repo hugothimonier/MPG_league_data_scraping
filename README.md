@@ -19,13 +19,17 @@ $ conda create --name mpgscrap
 $ conda activate mpgscrap
 $ pip3 install -r requirements.txt
 ```
-#### Chromedriver
+#### Driver
 
-One must also install Chromedriver. (https://chromedriver.chromium.org/). Note that for Chromedriver to operate, one needs Google Chrome to be installed.
+One must also install a driver. (I recommand https://github.com/mozilla/geckodriver/releases but Chromedrive also works fine https://chromedriver.chromium.org/). Note that for a driver to operate, one needs the browser to be installed in the first place (resp. Firefox and Google Chrome).
 
 For MacOS it is available via ``brew`` through the following command :
 ```bash
 $ brew install chromedriver
+```
+or
+```bash
+$ brew install geckodriver
 ```
 
 ### Usage
@@ -39,7 +43,11 @@ $ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER
 
 ### Main functions
 
-Other functionalities are available, among which :
+For a more custom use of our functions :
+```python
+mpg_scraper = mpg_scraper = MpgScraper(user='*YOUR_USERNAME*', pwd='*YOUR_PASSWORD*', nb_gw=*NUMBER_OF_GAMES_PLAYED*, nb_gamers=*NUMBER_OF_TEAMS_IN_LEAGUE*, nb_seasons_played=*NB_OF_SEASONS_PLAYED*, user_team_name='*YOUR_TEAM_NAME*', driver='*DRIVER_OF_YOUR_CHOICE*')
+```
+``DRIVER_OF_YOUR_CHOICE in ['Chrome', 'Firefox']``. Default driver is ``Firefox``.
 
 #### Compute league's ranking without bonus :
 
