@@ -45,7 +45,7 @@ $ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER
 
 For a more custom use of our functions :
 ```python
-mpg_scraper = mpg_scraper = MpgScraper(user='*YOUR_USERNAME*', pwd='*YOUR_PASSWORD*', nb_gw=*NUMBER_OF_GAMES_PLAYED*, nb_gamers=*NUMBER_OF_TEAMS_IN_LEAGUE*, nb_seasons_played=*NB_OF_SEASONS_PLAYED*, user_team_name='*YOUR_TEAM_NAME*', driver='*DRIVER_OF_YOUR_CHOICE*')
+mpg_scraper = MpgScraper(user='*YOUR_USERNAME*', pwd='*YOUR_PASSWORD*', nb_gw=*NUMBER_OF_GAMES_PLAYED*, nb_gamers=*NUMBER_OF_TEAMS_IN_LEAGUE*, nb_seasons_played=*NB_OF_SEASONS_PLAYED*, user_team_name='*YOUR_TEAM_NAME*', driver='*DRIVER_OF_YOUR_CHOICE*')
 ```
 ``DRIVER_OF_YOUR_CHOICE in ['Chrome', 'Firefox']``. Default driver is ``Firefox``.
 
