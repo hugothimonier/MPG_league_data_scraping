@@ -619,59 +619,63 @@ class MpgScraper():
                     match_url = league_url + '/detail/{}_{}_{}'.format(z, i, j)
                     self.open_page(url=match_url)
                     time.sleep(2)
-                    users = self.find_users()
+
+                    try:
+                        users = self.find_users()
                     
 
-                    score = self.find_score()
-                    dif = score[0] - score[1]
+                        score = self.find_score()
+                        dif = score[0] - score[1]
 
-                    if dif == 0:
-                        winner = 'draw'
-                    if dif > 0 :
-                        winner = 'home'
-                    if dif < 0 :
-                        winner = 'away'
+                        if dif == 0:
+                            winner = 'draw'
+                        if dif > 0 :
+                            winner = 'home'
+                        if dif < 0 :
+                            winner = 'away'
 
-                    formation = self.find_formation()
-                    bonus_home, bonus_away = self.find_bonus()
-                    scorer_home, scorer_away = self.find_scorer()
-                    player_grades_home, player_grades_away = self.find_players_grade()
-                    add_position(player_grades_home, formation[0])
-                    add_position(player_grades_away, formation[1])
-                    if any('Chapron rouge' in sublist for sublist in bonus_home):
-                        for bonus in bonus_home:
-                            if 'Chapron rouge' in bonus :
-                                player_name = bonus[1].replace('b\'','')
-                                player_name = player_name.replace('\'','')
-                        excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
-                        excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
-                        print(excluded_player_home, excluded_player_away)
-                        if not isinstance(excluded_player_home, type(None)):
-                            excluded_player_home.append('excluded by Chapron Rouge')
-                            player_grades_home[player_name] = excluded_player_home
-                        if not isinstance(excluded_player_away, type(None)):
-                            excluded_player_away.append('excluded by Chapron Rouge')
-                            player_grades_away[player_name] = excluded_player_away
+                        formation = self.find_formation()
+                        bonus_home, bonus_away = self.find_bonus()
+                        scorer_home, scorer_away = self.find_scorer()
+                        player_grades_home, player_grades_away = self.find_players_grade()
+                        add_position(player_grades_home, formation[0])
+                        add_position(player_grades_away, formation[1])
+                        if any('Chapron rouge' in sublist for sublist in bonus_home):
+                            for bonus in bonus_home:
+                                if 'Chapron rouge' in bonus :
+                                    player_name = bonus[1].replace('b\'','')
+                                    player_name = player_name.replace('\'','')
+                            excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
+                            excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
+                            print(excluded_player_home, excluded_player_away)
+                            if not isinstance(excluded_player_home, type(None)):
+                                excluded_player_home.append('excluded by Chapron Rouge')
+                                player_grades_home[player_name] = excluded_player_home
+                            if not isinstance(excluded_player_away, type(None)):
+                                excluded_player_away.append('excluded by Chapron Rouge')
+                                player_grades_away[player_name] = excluded_player_away
 
-                    if any('Chapron rouge' in sublist for sublist in bonus_away):
-                        for bonus in bonus_away:
-                            if 'Chapron rouge' in bonus :
-                                player_name = bonus[1].replace('b\'','')
-                                player_name = player_name.replace('\'','')
-                        excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
-                        excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
-                        print(excluded_player_home, excluded_player_away)
-                        if not isinstance(excluded_player_home, type(None)):
-                            excluded_player_home.append('excluded by Chapron Rouge')
-                            player_grades_home[player_name] = excluded_player_home
-                        if not isinstance(excluded_player_away, type(None)):
-                            excluded_player_away.append('excluded by Chapron Rouge')
-                            player_grades_away[player_name] = excluded_player_away
-                    time.sleep(5)
+                        if any('Chapron rouge' in sublist for sublist in bonus_away):
+                            for bonus in bonus_away:
+                                if 'Chapron rouge' in bonus :
+                                    player_name = bonus[1].replace('b\'','')
+                                    player_name = player_name.replace('\'','')
+                            excluded_player_home = self.find_player_grade(player_name, formation[0], home=True)
+                            excluded_player_away = self.find_player_grade(player_name, formation[1], home=False)
+                            print(excluded_player_home, excluded_player_away)
+                            if not isinstance(excluded_player_home, type(None)):
+                                excluded_player_home.append('excluded by Chapron Rouge')
+                                player_grades_home[player_name] = excluded_player_home
+                            if not isinstance(excluded_player_away, type(None)):
+                                excluded_player_away.append('excluded by Chapron Rouge')
+                                player_grades_away[player_name] = excluded_player_away
+                        time.sleep(7)
 
 
-                    data_general.loc[len(data_general)] = [users[0], users[1], z, i, score, winner, score[0], score[1], formation[0], formation[1],
-                                                           bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away]
+                        data_general.loc[len(data_general)] = [users[0], users[1], z, i, score, winner, score[0], score[1], formation[0], formation[1],
+                                                               bonus_home, bonus_away, scorer_home, scorer_away, player_grades_home, player_grades_away]
+                    except IndexError:
+                        continue
 
         return data_general
 
