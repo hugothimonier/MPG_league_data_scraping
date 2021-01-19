@@ -38,7 +38,7 @@ To scrape data of league named 'MPG League', and save it as a json file:
 
 ```bash
 $ cd MPG_league_data_scrapping/
-$ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER_OF_GAMES_PLAYED* -nb_teams *NUMBER_OF_TEAMS_IN_LEAGUE* -nb_seasons *NB_OF_SEASONS_PLAYED* -team_name '*YOUR_TEAM_NAME*' -league_name '*LEAGUE_NAME*' -json_file '*JSON_FILE_NAME*'
+$ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER_OF_GAMES_PLAYED* -nb_teams *NUMBER_OF_TEAMS_IN_LEAGUE* -nb_seasons *NB_OF_SEASONS_PLAYED* -team_name '*YOUR_TEAM_NAME*' -league_name '*LEAGUE_NAME*' -json_file '*JSON_FILE_NAME*' -driver '*DRIVER_OF_YOUR_CHOICE*'
 ```
 
 ### Main functions
