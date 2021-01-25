@@ -612,7 +612,7 @@ class MpgScraper():
 
         league_url = 'https://mpg.football' + href.replace('wall', 'results')
         nb_match = int(self.nb_gamers/2)
-        for z in range(1, self.nb_seasons_played):
+        for z in range(1, self.nb_seasons_played+1):
             for i in range(1, self.nb_gw+1):
                 for j in range(1, nb_match+1):
                     print('Saison {}, Journée {}, match {}'.format(z,i,j))
