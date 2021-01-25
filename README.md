@@ -38,14 +38,15 @@ To scrape data of league named 'MPG League', and save it as a json file:
 
 ```bash
 $ cd MPG_league_data_scrapping/
-$ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER_OF_GAMES_PLAYED* -nb_teams *NUMBER_OF_TEAMS_IN_LEAGUE* -nb_seasons *NB_OF_SEASONS_PLAYED* -team_name '*YOUR_TEAM_NAME*' -league_name '*LEAGUE_NAME*' -json_file '*JSON_FILE_NAME*' -driver '*DRIVER_OF_YOUR_CHOICE*'
+$ python scrape.py -user '*YOUR_USERNAME*' -pwd '*YOUR_PASSWORD*' -nb_gw *NUMBER_OF_GAMES_PLAYED* -nb_teams *NUMBER_OF_TEAMS_IN_LEAGUE* -first_season *FIRST_SEASON_TO_SCRAPE* -last_season *LAST_SEASON_TO_SCRAPE* -team_name '*YOUR_TEAM_NAME*' -league_name '*LEAGUE_NAME*' -json_file '*JSON_FILE_NAME*' -driver '*DRIVER_OF_YOUR_CHOICE*'
 ```
+Note that ``-first_season`` and ``-last_season`` can be the same if one wishes to scrape only one season.
 
 ### Main functions
 
 For a more custom use of our functions :
 ```python
-mpg_scraper = MpgScraper(user='*YOUR_USERNAME*', pwd='*YOUR_PASSWORD*', nb_gw=*NUMBER_OF_GAMES_PLAYED*, nb_gamers=*NUMBER_OF_TEAMS_IN_LEAGUE*, nb_seasons_played=*NB_OF_SEASONS_PLAYED*, user_team_name='*YOUR_TEAM_NAME*', driver='*DRIVER_OF_YOUR_CHOICE*')
+mpg_scraper = MpgScraper(user='*YOUR_USERNAME*', pwd='*YOUR_PASSWORD*', nb_gw=*NUMBER_OF_GAMES_PLAYED*, nb_gamers=*NUMBER_OF_TEAMS_IN_LEAGUE*, first_season=*FIRST_SEASON_TO_SCRAPE*,  last_season=*LAST_SEASON_TO_SCRAPE*, user_team_name='*YOUR_TEAM_NAME*', driver='*DRIVER_OF_YOUR_CHOICE*')
 ```
 ``DRIVER_OF_YOUR_CHOICE in ['Chrome', 'Firefox']``. Default driver is ``Firefox``.
 

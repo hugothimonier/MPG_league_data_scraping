@@ -45,19 +45,21 @@ class MpgScraper():
         {str} pwd: password for your account
         {int} nb_gw: number of game weeks that have been played
         {int} nb_gamers: number of players in the league
-        {int} nb_seasons_played: number of times the league has been restarted, it is the fifth time you play in the league then nb_seasons_played=5
+        {int} first_season: first season to scrape
+        {int} last_season: last season to scrape
         {str} user_team_name: name of your team in the league
         {str} driver_type: type of driver to user for scrapping, default is Chrome
     '''
 
-    def __init__(self, user, pwd, nb_gw, nb_gamers, nb_seasons_played, user_team_name, driver='Firefox'):
+    def __init__(self, user, pwd, nb_gw, nb_gamers, first_season, last_season, user_team_name, driver='Firefox'):
 
         assert driver in ['Chrome','Firefox']
         self.user = user
         self.pwd = pwd
         self.nb_gw = nb_gw
         self.nb_gamers = nb_gamers
-        self.nb_seasons_played = nb_seasons_played
+        self.first_season = first_season
+        self.last_season = last_season
         self.driver = webdriver.Firefox() if driver=='Firefox' else webdriver.Chrome(chrome_options=chrome_options)
         self.url = 'https://mpg.football/?type=login'
         self.MPG_statistics = MPG_Statistics.MpgStatistics()
@@ -612,7 +614,7 @@ class MpgScraper():
 
         league_url = 'https://mpg.football' + href.replace('wall', 'results')
         nb_match = int(self.nb_gamers/2)
-        for z in range(1, self.nb_seasons_played+1):
+        for z in range(self.first_season, self.last_season+1):
             for i in range(1, self.nb_gw+1):
                 for j in range(1, nb_match+1):
                     print('Saison {}, Journée {}, match {}'.format(z,i,j))
